@@ -10,3 +10,9 @@ Makefile
 Makefile.in
 libtool
 stamp-h1
+
+# 6.5610 project
+65610project/data/
+65610project/cache/
+65610venv/
+.DS_Store

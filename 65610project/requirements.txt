@@ -1,0 +1,8 @@
+remotezip>=0.12
+tqdm>=4.65
+requests>=2.30
+numpy>=1.26
+scipy>=1.10
+soundfile>=0.12
+matplotlib>=3.7
+pandas>=2.0
