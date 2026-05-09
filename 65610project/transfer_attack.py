@@ -98,6 +98,57 @@ class Audiowmark:
     def _data(self, p: Path) -> str:
         return f"/data/{Path(p).resolve().relative_to(REPO_ROOT).as_posix()}"
 
+    def run(self, args: List[str], path_args: List[Path]) -> subprocess.CompletedProcess:
+        """Run audiowmark subcommands with Docker / native invocation."""
+        if self._docker:
+            cmd = [
+                "docker", "run", "--rm",
+                "-u", f"{os.getuid()}:{os.getgid()}",
+                "-v", f"{REPO_ROOT}:/data",
+                "--entrypoint", "/usr/local/bin/audiowmark",
+                self._image,
+                *args,
+            ]
+        else:
+            cmd = [self._cmd, *args]
+        log.debug("exec: %s", " ".join(cmd))
+        return subprocess.run(cmd, check=False, capture_output=True, text=True)
+
+    def gen_key(self, key_file: Path) -> None:
+        key_file.parent.mkdir(parents=True, exist_ok=True)
+        if self._docker:
+            args = ["gen-key", self._data(key_file)]
+        else:
+            args = ["gen-key", str(key_file)]
+        proc = self.run(args, [key_file])
+        if proc.returncode != 0:
+            raise RuntimeError(f"gen-key failed: {proc.stderr.strip()}")
+
+    def add(self, key_file: Path, in_wav: Path, out_wav: Path,
+            message_hex: str, strength: int) -> None:
+        out_wav.parent.mkdir(parents=True, exist_ok=True)
+        if self._docker:
+            args = [
+                "add",
+                "--key", self._data(key_file),
+                "--strength", str(strength),
+                self._data(in_wav),
+                self._data(out_wav),
+                message_hex,
+            ]
+        else:
+            args = [
+                "add",
+                "--key", str(key_file),
+                "--strength", str(strength),
+                str(in_wav),
+                str(out_wav),
+                message_hex,
+            ]
+        proc = self.run(args, [key_file, in_wav, out_wav])
+        if proc.returncode != 0:
+            raise RuntimeError(f"add failed for {in_wav.name}: {proc.stderr.strip()}")
+
     def get_json(self, key_file: Path, wav: Path, json_out: Path) -> dict:
         json_out.parent.mkdir(parents=True, exist_ok=True)
         if self._docker:

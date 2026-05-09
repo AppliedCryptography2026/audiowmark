@@ -19,6 +19,7 @@ Usage:
     python retreive_soundfiles.py --num 80
     python retreive_soundfiles.py --num 5 --seed 42
     python retreive_soundfiles.py --list-only --num 80
+    python 65610project/retreive_soundfiles.py --num 80 --seed 6561
 """
 
 from __future__ import annotations
